@@ -6,14 +6,24 @@
 {% endcomment %}
 <script
   type="text/javascript">
-  let polyfillScript = document.createElement('script');
-  polyfillScript.onload = function () {
+  var exports = {};
+  let loadFlasherScript = function() {
     let flasherScript = document.createElement('script');
     flasherScript.src = 'https://unpkg.com/@nabucasa/sl-web-tools@0.10.1/dist/web/nabucasa-zigbee-flasher.js?module';
     flasherScript.type = 'module';
     document.head.appendChild(flasherScript);
-  };
-  polyfillScript.src = 'assets/serial.js';
-  polyfillScript.type = 'text/javascript';
-  document.head.appendChild(polyfillScript);
+  }
+
+  if (!navigator.serial) {
+    let polyfillScript = document.createElement('script');
+    polyfillScript.onload = function() {
+      navigator.serial = exports.serial;
+      loadFlasherScript();
+    }
+    polyfillScript.src = 'assets/serial.js';
+    polyfillScript.type = 'text/javascript';
+    document.head.appendChild(polyfillScript);
+  } else {
+    loadFlasherScript();
+  }
 </script>
