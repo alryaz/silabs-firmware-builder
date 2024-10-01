@@ -109,5 +109,11 @@ SMLIGHT SLZB-07 -  Hardware flow control
         //     element.classList.add('hidden');
         // });
         document.getElementById("notSupported").classList.remove('hidden');
+        var script = document.createElement('script');
+        script.onload = function () {
+            document.getElementById("notSupported").classList.add('hidden');
+        };
+        script.src = 'assets/serial.js';
+        document.head.appendChild(script);
     }
 </script>
