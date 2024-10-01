@@ -16,12 +16,10 @@
  * permissions and limitations under the License.
  */
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.serial = exports.SerialPort = exports.SerialPolyfillProtocol = void 0;
-var SerialPolyfillProtocol;
+export var SerialPolyfillProtocol;
 (function (SerialPolyfillProtocol) {
     SerialPolyfillProtocol[SerialPolyfillProtocol["UsbCdcAcm"] = 0] = "UsbCdcAcm";
-})(SerialPolyfillProtocol = exports.SerialPolyfillProtocol || (exports.SerialPolyfillProtocol = {}));
+})(SerialPolyfillProtocol || (SerialPolyfillProtocol = {}));
 const kSetLineCoding = 0x20;
 const kSetControlLineState = 0x22;
 const kSendBreak = 0x23;
@@ -90,6 +88,7 @@ class UsbEndpointUnderlyingSource {
      * @param {function} onError function to be called on error
      */
     constructor(device, endpoint, onError) {
+        this.type = 'bytes';
         this.device_ = device;
         this.endpoint_ = endpoint;
         this.onError_ = onError;
@@ -97,7 +96,7 @@ class UsbEndpointUnderlyingSource {
     /**
      * Reads a chunk of data from the device.
      *
-     * @param {ReadableStreamDefaultController} controller
+     * @param {ReadableByteStreamController} controller
      */
     pull(controller) {
         (async () => {
@@ -169,7 +168,7 @@ class UsbEndpointUnderlyingSink {
     }
 }
 /** a class used to control serial devices over WebUSB */
-class SerialPort {
+export class SerialPort {
     /**
      * constructor taking a WebUSB device that creates a SerialPort instance.
      * @param {USBDevice} device A device acquired from the WebUSB API
@@ -199,9 +198,9 @@ class SerialPort {
         if (!this.readable_ && this.device_.opened) {
             this.readable_ = new ReadableStream(new UsbEndpointUnderlyingSource(this.device_, this.inEndpoint_, () => {
                 this.readable_ = null;
-            }), new ByteLengthQueuingStrategy({
+            }), {
                 highWaterMark: (_a = this.serialOptions_.bufferSize) !== null && _a !== void 0 ? _a : kDefaultBufferSize,
-            }));
+            });
         }
         return this.readable_;
     }
@@ -271,6 +270,15 @@ class SerialPort {
             await this.setSignals({ dataTerminalReady: false, requestToSend: false });
             await this.device_.close();
         }
+    }
+    /**
+     * Forgets the port.
+     *
+     * @return {Promise<void>} A promise that will resolve when the port is
+     * forgotten.
+     */
+    async forget() {
+        return this.device_.forget();
     }
     /**
      * A function that returns properties of the device.
@@ -419,7 +427,6 @@ class SerialPort {
         }
     }
 }
-exports.SerialPort = SerialPort;
 /** implementation of the global navigator.serial object */
 class Serial {
     /**
@@ -478,7 +485,25 @@ class Serial {
         });
         return ports;
     }
+    /**
+     * Attach an event listener.
+     *
+     * @param {string} event the event to listen for.
+     * @param {Function} handleEvent the function to be triggered on the event.
+     */
+    addEventListener(event, handleEvent) {
+        navigator.usb.addEventListener(event, handleEvent);
+    }
+    /**
+     * Remove an event listener.
+     *
+     * @param {string} event the event for which the listener should be removed.
+     * @param {Function} handleEvent the handler to be removed.
+     */
+    removeEventListener(event, handleEvent) {
+        navigator.usb.removeEventListener(event, handleEvent);
+    }
 }
 /* an object to be used for starting the serial workflow */
-exports.serial = new Serial();
+export const serial = new Serial();
 //# sourceMappingURL=serial.js.map
